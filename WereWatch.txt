@@ -1,0 +1,6 @@
+## Title: WereWatch
+## APIVersion: 100018
+## SavedVariables: WereWatchSavedVariables
+
+WereWatch.xml
+WereWatch.lua
