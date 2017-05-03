@@ -51,12 +51,31 @@ function WereWatch.OnWerewolfStateChanged(eventCode, werewolf)
 			-- stop the stopwatch
 			WereWatch.stopTime = GetTimeStamp()
 			WereWatch.running = false
-			-- calculate time difference and break down into minutes and seconds
+			-- calculate time difference
 			WereWatch.deltaTime = GetDiffBetweenTimeStamps(WereWatch.stopTime, WereWatch.startTime)
-			-- announce to player
-			d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ".")
+			-- check for best time
+			if WereWatch.deltaTime > WereWatch.savedVariables.bestTime then
+				-- New best time!
+				d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". This beats your previous best time of " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. "!")
+				WereWatch.savedVariables.bestTime = WereWatch.deltaTime
+			elseif WereWatch.deltaTime < WereWatch.savedVariables.bestTime then
+				-- No new best time.
+				d("[WereWatch] You held your werewolf form for " .. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". Your best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
+			end -- if WereWatch.deltaTime
 		end -- if werewolf
 	end -- if werewolf ~= WereWatch.werewolf
+end -- function
+
+function WereWatch.OnLinkedWorldPositionChanged(eventCode)
+	if WereWatch.werewolf then
+		WereWatch.OnWerewolfStateChanged(eventCode, false)
+	end -- if
+end -- function
+
+function WereWatch.OnPlayerDead(eventCode)
+	if WereWatch.werewolf then
+		WereWatch.OnWerewolfStateChanged(eventCode, false)
+	end -- if
 end -- function
 
 function WereWatch.ToMinSec(timestamp)
@@ -83,8 +102,12 @@ SLASH_COMMANDS["/ww"] = function(arg)
 		WereWatch.OnWerewolfStateChanged("debug", false)
 	elseif arg == "pos" then
 		d("[WereWatch] Timer position: " .. WereWatchUI:GetLeft() .. ", " .. WereWatchUI:GetTop())
+	elseif arg == "best" then
+		d("Your current best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
 	end -- if
 end -- function
 
 EVENT_MANAGER:RegisterForEvent(WereWatch.name, EVENT_ADD_ON_LOADED, WereWatch.OnAddOnLoaded)
 EVENT_MANAGER:RegisterForEvent(WereWatch.name, EVENT_WEREWOLF_STATE_CHANGED, WereWatch.OnWerewolfStateChanged)
+EVENT_MANAGER:RegisterForEvent(WereWatch.name, EVENT_LINKED_WORLD_POSITION_CHANGED, WereWatch.OnLinkedWorldPositionChanged)
+EVENT_MANAGER:RegisterForEvent(WereWatch.name, EVENT_PLAYER_DEAD, WereWatch.OnPlayerDead)
