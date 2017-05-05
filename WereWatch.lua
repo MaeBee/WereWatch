@@ -54,14 +54,19 @@ function WereWatch.OnWerewolfStateChanged(eventCode, werewolf)
 			-- calculate time difference
 			WereWatch.deltaTime = GetDiffBetweenTimeStamps(WereWatch.stopTime, WereWatch.startTime)
 			-- check for best time
-			if WereWatch.deltaTime > WereWatch.savedVariables.bestTime then
-				-- New best time!
-				d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". This beats your previous best time of " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. "!")
+			if WereWatch.savedVariables.bestTime ~= nil then
+				if WereWatch.deltaTime > WereWatch.savedVariables.bestTime then
+					-- New best time!
+					d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". This beats your previous best time of " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. "!")
+					WereWatch.savedVariables.bestTime = WereWatch.deltaTime
+				elseif WereWatch.deltaTime < WereWatch.savedVariables.bestTime then
+					-- No new best time.
+					d("[WereWatch] You held your werewolf form for " .. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". Your best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
+				end -- if WereWatch.deltaTime
+			else
+				d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". No previous best time found.")
 				WereWatch.savedVariables.bestTime = WereWatch.deltaTime
-			elseif WereWatch.deltaTime < WereWatch.savedVariables.bestTime then
-				-- No new best time.
-				d("[WereWatch] You held your werewolf form for " .. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". Your best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
-			end -- if WereWatch.deltaTime
+			end -- if WereWatch.savedVariables.bestTime
 		end -- if werewolf
 	end -- if werewolf ~= WereWatch.werewolf
 end -- function
