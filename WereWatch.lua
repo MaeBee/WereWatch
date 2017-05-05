@@ -59,7 +59,7 @@ function WereWatch.OnWerewolfStateChanged(eventCode, werewolf)
 					-- New best time!
 					d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". This beats your previous best time of " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. "!")
 					WereWatch.savedVariables.bestTime = WereWatch.deltaTime
-				elseif WereWatch.deltaTime < WereWatch.savedVariables.bestTime then
+				elseif WereWatch.deltaTime <= WereWatch.savedVariables.bestTime then
 					-- No new best time.
 					d("[WereWatch] You held your werewolf form for " .. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". Your best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
 				end -- if WereWatch.deltaTime
