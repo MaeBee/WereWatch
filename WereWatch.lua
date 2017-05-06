@@ -73,13 +73,13 @@ end -- function
 
 function WereWatch.OnLinkedWorldPositionChanged(eventCode)
 	if WereWatch.werewolf then
-		WereWatch.OnWerewolfStateChanged(eventCode, false)
+		WereWatch.OnWerewolfStateChanged(eventCode, IsWerewolf())
 	end -- if
 end -- function
 
 function WereWatch.OnPlayerDead(eventCode)
 	if WereWatch.werewolf then
-		WereWatch.OnWerewolfStateChanged(eventCode, false)
+		WereWatch.OnWerewolfStateChanged(eventCode, IsWerewolf())
 	end -- if
 end -- function
 
