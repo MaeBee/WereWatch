@@ -2,6 +2,7 @@
 -- by gobbo (@gobbo1008)
 WereWatch = {}
 WereWatch.name = "WereWatch"
+WereWatch.version = 1.2
  
 function WereWatch:Initialize()
 	self.savedVariables = ZO_SavedVars:New("WereWatchSavedVariables", 1, nil, {})
@@ -10,8 +11,81 @@ function WereWatch:Initialize()
 	local top = self.savedVariables.top
 	WereWatchUI:ClearAnchors()
 	WereWatchUI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, left, top)
+	WereWatch.evalOptions()
+	-- Here be LibAddonMenu dragons
+	local LAM = LibStub:GetLibrary("LibAddonMenu-2.0")
+	local panelData = {
+		type = "panel",
+		name = "WereWatch",
+		author = "gobbo",
+		version = "" .. WereWatch.version,
+		registerForRefresh = true,
+    }
+	LAM:RegisterAddonPanel("WereWatchOptions", panelData)
+	local optionsData = {
+		[1] = {
+			type = "checkbox",
+			name = "Enable timer",
+			tooltip = "Enables the timer UI element.",
+			getFunc = function() return WereWatch.savedVariables.optionsTimer end,
+			setFunc = function(value)
+					WereWatch.savedVariables.optionsTimer = value
+					WereWatch.evalOptions()
+					if not value then
+						WereWatchUI:SetHidden(true)
+					end
+				end,
+		},
+		[2] = {
+			type = "checkbox",
+			name = "Enable chat message",
+			tooltip = "Enables the chat message at the end of the werewolf run.",
+			getFunc = function() return WereWatch.savedVariables.optionsMessage end,
+			setFunc = function(value) WereWatch.savedVariables.optionsMessage = value end,
+		},
+		[3] = {
+			type = "checkbox",
+			name = "Force-show timer",
+			tooltip = "Force-shows the timer to allow you to place it where you want it. Will auto-hide on next transformation back to human.",
+			getFunc = function() return not WereWatchUI:IsHidden() end,
+			setFunc = function(value) WereWatchUI:SetHidden(not value) end,
+		},
+		[4] = {
+			type = "description",
+			-- width = "half",
+			reference = "WereWatchOptionsBestTime",
+			title = "Current best time: " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime),
+		},
+		[5] = {
+			type = "button",
+			width = "half",
+			name = "Reset best time",
+			tooltip = "Resets your best time.",
+			func = function() WereWatch.savedVariables.bestTime = 0 end,
+		},
+		[6] = {
+			type = "button",
+			width = "half",
+			name = "Reset timer position",
+			tooltip = "Should you have accidentally moved the timer somwhere you can't reach it, this will reset it to the upper left corner of the screen.",
+			func = function() 
+					WereWatchUI:ClearAnchors()
+					WereWatchUI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 0, 0)
+				end,
+		},
+		[7] = {
+			-- Helper control to refresh the best time label. Not sure if this is neccessary, but it works.
+			-- Please open an issue or a pull request if there is a better or easier way to do it, I'm new to this stuff
+			type = "custom",
+			refreshFunc = function()
+					WereWatchOptionsBestTime.data.title = "Current best time: " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime)
+					WereWatchOptionsBestTime.UpdateValue(WereWatchOptionsBestTime)
+				end,
+		},
+	}
+	LAM:RegisterOptionControls("WereWatchOptions", optionsData)
 end -- function
- 
+
 -- Load handler
 function WereWatch.OnAddOnLoaded(event, addonName)
 	if addonName == WereWatch.name then
@@ -45,7 +119,9 @@ function WereWatch.OnWerewolfStateChanged(eventCode, werewolf)
 			-- start the stopwatch
 			WereWatch.startTime = GetTimeStamp()
 			WereWatch.running = true
-			WereWatchUI:SetHidden(false)
+			if (WereWatch.savedVariables.optionsTimer) then
+				WereWatchUI:SetHidden(false)
+			end -- if
 		else
 			-- player turned into human again
 			-- stop the stopwatch
@@ -57,14 +133,20 @@ function WereWatch.OnWerewolfStateChanged(eventCode, werewolf)
 			if WereWatch.savedVariables.bestTime ~= nil then
 				if WereWatch.deltaTime > WereWatch.savedVariables.bestTime then
 					-- New best time!
-					d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". This beats your previous best time of " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. "!")
+					if (WereWatch.savedVariables.optionsMessage) then
+						d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". This beats your previous best time of " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. "!")
+					end
 					WereWatch.savedVariables.bestTime = WereWatch.deltaTime
 				elseif WereWatch.deltaTime <= WereWatch.savedVariables.bestTime then
 					-- No new best time.
-					d("[WereWatch] You held your werewolf form for " .. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". Your best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
+					if (WereWatch.savedVariables.optionsMessage) then
+						d("[WereWatch] You held your werewolf form for " .. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". Your best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
+					end
 				end -- if WereWatch.deltaTime
 			else
-				d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". No previous best time found.")
+				if (WereWatch.savedVariables.optionsMessage) then
+					d("[WereWatch] You held your werewolf form for ".. WereWatch.ToMinSec(WereWatch.deltaTime) .. ". No previous best time found.")
+				end
 				WereWatch.savedVariables.bestTime = WereWatch.deltaTime
 			end -- if WereWatch.savedVariables.bestTime
 		end -- if werewolf
@@ -83,6 +165,15 @@ function WereWatch.OnPlayerDead(eventCode)
 	end -- if
 end -- function
 
+function WereWatch.evalOptions()
+	if WereWatch.savedVariables.optionsTimer == nil then
+		WereWatch.savedVariables.optionsTimer = true
+	end
+	if WereWatch.savedVariables.optionsMessage == nil then
+		WereWatch.savedVariables.optionsMessage = true
+	end
+end -- function
+
 function WereWatch.ToMinSec(timestamp)
 	timestamp = math.floor(timestamp)
 	local minutes = math.floor(timestamp/60)
@@ -97,18 +188,16 @@ function WereWatch.ToMinSec(timestamp)
 end -- function
 
 SLASH_COMMANDS["/ww"] = function(arg)
-	if arg == "show" then
-		WereWatchUI:SetHidden(false)
-	elseif arg == "hide" then
-		WereWatchUI:SetHidden(true)
-	elseif arg == "start" then
+	if arg == "start" then
 		WereWatch.OnWerewolfStateChanged("debug", true)
 	elseif arg == "stop" then
 		WereWatch.OnWerewolfStateChanged("debug", false)
 	elseif arg == "pos" then
 		d("[WereWatch] Timer position: " .. WereWatchUI:GetLeft() .. ", " .. WereWatchUI:GetTop())
 	elseif arg == "best" then
-		d("Your current best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
+		d("[WereWatch] Your current best time is " .. WereWatch.ToMinSec(WereWatch.savedVariables.bestTime) .. ".")
+	elseif tonumber(arg) >= 0 then
+		WereWatch.savedVariables.bestTime = tonumber(arg)
 	end -- if
 end -- function
 
