@@ -7,8 +7,6 @@ Features:
 * Best time tracking
 
 Comes with a / command, /ww, to manage debugging aspects of the addon:
-* "/ww show" force-shows the UI element to allow positioning
-* "/ww hide" force-hides it again
 * "/ww start" force-starts the clock
 * "/ww stop" force-stops the clock, with chat notification
 * "/ww pos" outputs the current position of the UI element to chat
