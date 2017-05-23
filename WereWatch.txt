@@ -1,5 +1,5 @@
 ## Title: WereWatch
-## APIVersion: 100018
+## APIVersion: 100018 100019
 ## SavedVariables: WereWatchSavedVariables
 ## OptionalDependsOn: LibAddonMenu-2.0
 
