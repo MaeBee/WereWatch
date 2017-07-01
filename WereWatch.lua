@@ -2,13 +2,16 @@
 -- by gobbo (@gobbo1008)
 WereWatch = {}
 WereWatch.name = "WereWatch"
-WereWatch.version = 1.2
+WereWatch.version = 1.3
  
 function WereWatch:Initialize()
 	self.savedVariables = ZO_SavedVars:New("WereWatchSavedVariables", 1, nil, {})
 	self.werewolf = IsWerewolf()
 	local left = self.savedVariables.left
 	local top = self.savedVariables.top
+	if self.savedVariables.bestTime == nil then
+		self.savedVariables.bestTime = 0
+	end -- if
 	WereWatchUI:ClearAnchors()
 	WereWatchUI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, left, top)
 	WereWatch.evalOptions()
